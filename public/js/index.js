@@ -1,12 +1,16 @@
-let taxSwitch = document.getElementById("switchCheckDefault");
+const params = new URLSearchParams(window.location.search);
+const currentCategory = params.get("category");
 
-taxSwitch.addEventListener("click", () => {
-    let taxInfo = document.getElementsByClassName("tax-info");
-    for (let info of taxInfo) {
-        if (info.style.display != "inline") {
-            info.style.display = "inline";
-        } else {
-            info.style.display = "none";
+if (currentCategory) {
+    const options = document.querySelectorAll(".filterOption");
+
+    options.forEach(option => {
+        const anchor = option.querySelector("a");
+        const url = new URL(anchor.href);
+        const linkCategory = url.searchParams.get("category");
+
+        if (linkCategory === currentCategory) {
+            option.classList.add("active-option");
         }
-    }
-});
+    });
+}

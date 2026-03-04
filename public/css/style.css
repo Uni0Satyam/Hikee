@@ -186,6 +186,7 @@ select:focus{
     text-align: center;
     margin-right: 0.5rem;
     opacity: 0.7;
+    border-bottom: 2px solid #ff385d00;
 }
 
 .filterOption div i{
@@ -209,6 +210,12 @@ select:focus{
 
 .filterOption a{
     text-decoration: none;
+}
+
+.active-option {
+    opacity: 1;
+    cursor: pointer;
+    border-bottom: 2px solid #ff385c;
 }
 
 .tax-info {

@@ -8,23 +8,24 @@ module.exports.index = async (req, res) => {
     let q = req.query.q;
     let key = req.query.key;
 
-    let allListings;
+    let resListings;
     if (category) {
-      allListings = await Listing.find({ category });
+      resListings = await Listing.find({ category });
     } else if (q && key) {
       if (q === "city") {
-        allListings = await Listing.find({ location: key });
+        resListings = await Listing.find({ location: key });
       } else if (q === "country") {
-        allListings = await Listing.find({ country: key });
+        resListings = await Listing.find({ country: key });
       } else if (q === "title") {
-        allListings = await Listing.find({ title: key });
+        resListings = await Listing.find({ title: key });
       }
     }
     else {
-      allListings = await Listing.find({});
+      resListings = await Listing.find({});
     }
+    const listingLength = (await Listing.find({})).length;
 
-    res.render("listings/index.ejs", { allListings });
+    res.render("listings/index.ejs", { resListings, listingLength });
   } catch (err) {
     console.error("Error filtering listings:", err);
     req.flash("error", "Unable to load listings.");
