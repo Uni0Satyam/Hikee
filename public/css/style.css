@@ -187,6 +187,7 @@ select:focus{
     margin-right: 0.5rem;
     opacity: 0.7;
     border-bottom: 2px solid #ff385d00;
+    transition: border-bottom 1s 3ms;
 }
 
 .filterOption div i{
@@ -260,6 +261,12 @@ select:focus{
     opacity: 0.2;
     background-color: #fff;
 }
+
+/* Sign Up Page  */
+input[type="radio"]:checked + label{
+    border:2px solid #ff385c;
+}
+
 @media (max-width: 766px) {
 /* Navbar */
   .navbar{

@@ -7,8 +7,8 @@ module.exports.signUpPage = (req, res) => {
 module.exports.signUpRequest = async (req, res) => {
     try {
 
-        let { username, email, password } = req.body;
-        const newUser = new User({ email, username });
+        let { username, email, password, role } = req.body;
+        const newUser = new User({ email, username, role });
         const reg = await User.register(newUser, password);
         req.login(reg, (err) => {
             if (err) {
