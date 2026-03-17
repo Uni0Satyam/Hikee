@@ -5,19 +5,19 @@ const Listing = require("../models/listing");
 module.exports.index = async (req, res) => {
   try {
     let category = req.query.category;
-    let q = req.query.q;
-    let key = req.query.key;
+    let q = req.query.q?.trim().toLowerCase();
+    let key = req.query.key?.trim().toLowerCase();
 
     let resListings;
     if (category) {
       resListings = await Listing.find({ category });
     } else if (q && key) {
       if (q === "city") {
-        resListings = await Listing.find({ location: key });
+        resListings = await Listing.find({ location: { $regex: `^${key}`, $options: "i" } });
       } else if (q === "country") {
-        resListings = await Listing.find({ country: key });
+        resListings = await Listing.find({ country: { $regex: `^${key}`, $options: "i" } });
       } else if (q === "title") {
-        resListings = await Listing.find({ title: key });
+        resListings = await Listing.find({ title: { $regex: `^${key}`, $options: "i" } });
       }
     }
     else {

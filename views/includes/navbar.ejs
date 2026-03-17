@@ -28,10 +28,8 @@
         </div>
       </div>
       <div class="navbar-nav ms-auto">
-        <% if (currUser) { %>
-          <% if (currUser.role === "host") { %>
-            <a class="nav-link" href="/listings/new">Add Listings</a>
-          <% } %>
+        <% if (currUser && currUser.role === "host") { %>
+          <a class="nav-link" href="/listings/new">Add Listings</a>
         <% } %>
         <% if (!currUser) { %>
           <a class="nav-link" href="/login"><b>Login/Sign Up</b></a>
