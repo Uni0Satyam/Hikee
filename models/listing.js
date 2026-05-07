@@ -49,7 +49,8 @@ const listingSchema = new Schema({
 });
 
 listingSchema.index({
-    category: 1
+    category: 1,
+    _id: -1
  });
 
 listingSchema.post("findOneAndDelete",async(listing)=> {

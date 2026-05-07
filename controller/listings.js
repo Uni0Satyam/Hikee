@@ -4,13 +4,14 @@ const Listing = require("../models/listing");
 
 module.exports.index = async (req, res) => {
   try {
-    const { category, q, key } = req.query;
+    const { category, q, key, cursor } = req.query;
+    const pageSize = 6;
 
-    let filter = {};
+    const searchFilter = {};
 
-    if(category){
-      filter.category = category.trim();
-    } else if (q && key?.trim()){
+    if (category) {
+      searchFilter.category = category.trim();
+    } else if (q && key?.trim()) {
       const allowedFields = {
         city: "location",
         country: "country",
@@ -20,19 +21,52 @@ module.exports.index = async (req, res) => {
       const field = allowedFields[q.toLowerCase()];
   
       if (field) {
-        filter[field] = {
+        searchFilter[field] = {
           $regex: `^${key.trim()}`,
           $options: "i",
         };
       }
     }
-    
-    const [resListings, listingLength] = await Promise.all([
-      Listing.find(filter),
-      Listing.countDocuments(),
-    ]);
 
-    res.render("listings/index.ejs", { resListings, listingLength });
+    const filter = { ...searchFilter };
+    if (cursor) {
+      filter._id = { $lt: cursor };
+    }
+
+    let resListings = await Listing.find(filter)
+      .sort({ _id: -1 })
+      .limit(pageSize + 1);
+
+    const listingLength = await Listing.countDocuments(searchFilter);
+
+    let nextCursor = null;
+
+    if (resListings.length > pageSize) {
+      nextCursor = resListings[pageSize - 1]._id;
+      resListings = resListings.slice(0, pageSize);
+    }
+
+    if (req.query.ajax === "true") {
+      return res.json({
+        listings: resListings.map((listing) => ({
+          _id: listing._id,
+          title: listing.title,
+          price: listing.price,
+          imageUrl: listing.image?.url || "",
+        })),
+        nextCursor,
+      });
+    }
+
+    res.render("listings/index.ejs", {
+      resListings,
+      listingLength,
+      nextCursor,
+      category,
+      q,
+      key,
+      hasMore: !!nextCursor,
+    });
   } catch (err) {
     console.error("Error filtering listings:", err);
     req.flash("error", "Unable to load listings.");

@@ -1,8 +1,8 @@
 <% layout("/layouts/boilerplate") %>
 <div class="row">
     <p class="my-2 text-muted">Showing 
-        <span class="text-black"><%= resListings.length %></span>
-         of <%= listingLength %> results
+        <span id="rangeStart" class="text-black">1</span>-<span id="rangeEnd" class="text-black"><%= resListings.length %></span>
+         of <span id="totalCount"><%= listingLength %></span> results
     </p>
     <div class="col mt-2 mb-2" id="filters">
         <div class="filterOption nav-underline">
@@ -61,7 +61,7 @@
         </div>
     </div>
 </div>
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 row-cols-sm-1">
+<div id="listingGrid" class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 row-cols-sm-1">
     <% for (let listing of resListings) { %><a
         href="/listings/<%= listing._id %>"
         class="listing-link">
@@ -86,3 +86,122 @@
     
     <% } %>
 </div>
+
+<div id="loader" class="text-center my-4" hidden>
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+<div id="endOfResults" class="text-center my-4 text-muted" hidden>
+  No more listings.
+</div>
+<div id="scrollSentinel" style="height: 1px;" data-cursor="<%= nextCursor || '' %>" data-has-more="<%= hasMore %>"></div>
+
+<script>
+  const listingGrid = document.getElementById("listingGrid");
+  const rangeStartEl = document.getElementById("rangeStart");
+  const rangeEndEl = document.getElementById("rangeEnd");
+  const totalCountEl = document.getElementById("totalCount");
+  const loader = document.getElementById("loader");
+  const endOfResults = document.getElementById("endOfResults");
+  const sentinel = document.getElementById("scrollSentinel");
+
+  let currentCursor = sentinel.dataset.cursor;
+  let hasMore = sentinel.dataset.hasMore === "true";
+  let loading = false;
+  let currentEnd = parseInt(rangeEndEl.textContent);
+
+  function createListingCard(listing) {
+    const anchor = document.createElement("a");
+    anchor.href = `/listings/${listing._id}`;
+    anchor.className = "listing-link";
+
+    const card = document.createElement("div");
+    card.className = "card col listing-card";
+
+    const img = document.createElement("img");
+    img.src = listing.imageUrl;
+    img.className = "card-img-top";
+    img.alt = "listing-image";
+    img.style.height = "20rem";
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const overlay = document.createElement("div");
+    overlay.className = "card-img-overlay";
+
+    const text = document.createElement("p");
+    text.className = "card-text";
+
+    const title = document.createElement("b");
+    title.textContent = listing.title;
+
+    const price = document.createElement("span");
+    price.textContent = `₹${Number(listing.price).toLocaleString("en-IN")}/ night`;
+
+    text.appendChild(title);
+    text.appendChild(document.createElement("br"));
+    text.appendChild(price);
+
+    body.appendChild(overlay);
+    body.appendChild(text);
+    card.appendChild(img);
+    card.appendChild(body);
+    anchor.appendChild(card);
+
+    return anchor;
+  }
+
+  function updateRange(added) {
+    currentEnd += added;
+    rangeEndEl.textContent = currentEnd;
+  }
+
+  async function loadMoreListings() {
+    if (!hasMore || loading) return;
+    loading = true;
+    loader.hidden = false;
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("ajax", "true");
+    params.set("cursor", currentCursor);
+
+    try {
+      const response = await fetch(`/listings?${params.toString()}`);
+      if (!response.ok) throw new Error("Unable to load more listings");
+      
+      const data = await response.json();
+      data.listings.forEach((listing) => {
+        listingGrid.appendChild(createListingCard(listing));
+      });
+
+      updateRange(data.listings.length);
+      currentCursor = data.nextCursor || "";
+      hasMore = Boolean(data.nextCursor);
+
+      if (!hasMore) {
+        endOfResults.hidden = false;
+        observer.disconnect();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading = false;
+      loader.hidden = true;
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadMoreListings();
+      }
+    },
+    { rootMargin: "300px" }
+  );
+
+  if (hasMore) {
+    observer.observe(sentinel);
+  }
+</script>
