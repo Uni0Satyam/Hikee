@@ -64,9 +64,9 @@ const sessionOptions = {
 };
 
 
-// app.get("/", (req, res) => {
-//     res.send("I am root");
-// });
+app.get("/", (req, res) => {
+    res.send("I am root");
+});
 
 
 app.use(session(sessionOptions));
@@ -88,31 +88,9 @@ app.use((req,res,next)=> {
     next();
 })
 
-// app.get("/demo",async(req,res)=>{
-//     let fakeUser = new User({
-//         email: "kartikpandey@gmail.com",
-//         username: "kartik"
-//     });
-//     let result = await User.register(fakeUser, "hello");
-//     console.log(result);
-// });
-
 app.use("/listings", listingRouter);
 app.use("/listings/:id/review", reviewRouter);
 app.use("/", userRouter);
-
-// app.get("/testListing", async(req,res) => {
-//     let sampleListing2 = new Listing({
-//         title: "Villa",
-//         description: "Beach view",
-//         price: 2000,
-//         location: "Mumbai",
-//         country: "India"
-//     });
-
-//     await sampleListing2.save();
-//     res.send("Successful");
-// });
 
 app.use((req, res, next) => {
     if (req.originalUrl.startsWith("/.well-known")) {

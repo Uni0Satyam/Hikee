@@ -4,26 +4,33 @@ const Listing = require("../models/listing");
 
 module.exports.index = async (req, res) => {
   try {
-    let category = req.query.category;
-    let q = req.query.q?.trim().toLowerCase();
-    let key = req.query.key?.trim().toLowerCase();
+    const { category, q, key } = req.query;
 
-    let resListings;
-    if (category) {
-      resListings = await Listing.find({ category });
-    } else if (q && key) {
-      if (q === "city") {
-        resListings = await Listing.find({ location: { $regex: `^${key}`, $options: "i" } });
-      } else if (q === "country") {
-        resListings = await Listing.find({ country: { $regex: `^${key}`, $options: "i" } });
-      } else if (q === "title") {
-        resListings = await Listing.find({ title: { $regex: `^${key}`, $options: "i" } });
+    let filter = {};
+
+    if(category){
+      filter.category = category.trim();
+    } else if (q && key?.trim()){
+      const allowedFields = {
+        city: "location",
+        country: "country",
+        title: "title",
+      };
+  
+      const field = allowedFields[q.toLowerCase()];
+  
+      if (field) {
+        filter[field] = {
+          $regex: `^${key.trim()}`,
+          $options: "i",
+        };
       }
     }
-    else {
-      resListings = await Listing.find({});
-    }
-    const listingLength = (await Listing.find({})).length;
+    
+    const [resListings, listingLength] = await Promise.all([
+      Listing.find(filter),
+      Listing.countDocuments(),
+    ]);
 
     res.render("listings/index.ejs", { resListings, listingLength });
   } catch (err) {
